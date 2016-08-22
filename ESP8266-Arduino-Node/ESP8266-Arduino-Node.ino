@@ -13,7 +13,7 @@
 #define BUTTON 5 //GPIO5
 #define PIN 4  //GPIO4
 #define PWMPIN 0  //GPIO0
-#define NUMPIXELS 27
+#define NUMPIXELS 48 //48 ws2812 RGB Pixels
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 //
@@ -112,20 +112,20 @@ void loop() {
     } else if (oscMessage.fullMatch("/RGB")) { //
 
       int pixelByte = 0;
-      //two 24 pixels ring, one will be 
-      //first 72 bytes 24 pixels
-      while (pixelByte < NUMPIXELS * 3) {
+      //first 24 pixels with the first 72 bytes
+      while (pixelByte < 24 * 3) {
         int r = oscMessage.getInt(pixelByte);
         int g = oscMessage.getInt(pixelByte + 1);
         int b = oscMessage.getInt(pixelByte + 2);
         strip.setPixelColor(pixelByte / 3, strip.Color(r, g, b));
         pixelByte += 3;
       }
-      //next 3 bytes define the 24 next pixels color
+      //next 3 bytes define the LED ring color
       int r = oscMessage.getInt(pixelByte);
       int g = oscMessage.getInt(pixelByte + 1);
       int b = oscMessage.getInt(pixelByte + 2);
-      
+
+      //set all 24 ws2812 pixels to the a sigle color
       for(int i = 0; i < 24; i++){
         strip.setPixelColor(24 + i, strip.Color(r, g, b));
       }
