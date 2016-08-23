@@ -83,7 +83,7 @@ class OSCNodesServer(object):
 
     def update(self, rgbBytes):
         self.rgbBytes = rgbBytes
-        for node, (macAddr, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e: e[2])): #sort by the time of the conection
+        for node, (macAddr, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])): #sort by the time of the conection
             #node index
             nodeChunck = self.rgbBytes[node*NODES_SIZE:node*NODES_SIZE + NODES_SIZE]
             #print(ip,nodeChunck)
@@ -92,7 +92,7 @@ class OSCNodesServer(object):
             oscmsg = osc.Message("/RGB")
             for b in nodeChunck:
                 oscmsg.add(b)
-            logging.info("Send disconnect {}".format(ip))
+            logging.info("Sending OSC message to {}".format(ip))
             self.sender.send(oscmsg, (ip,port))
 
     def _start(self):
@@ -108,8 +108,9 @@ class OSCNodesServer(object):
         print("Got %s from %s" % (message, address))
         ip = address[0]
         port = address[1]
-        macAddr = Message
+        macAddr = message.getValues()[0]
         self.nodesList[macAddr] = [ip, port, time.time()]
+        print(self.nodesList)
         self.sender.send(osc.Message("/connected"), (ip, port))
 
     def ping_handler(self, message, address):
