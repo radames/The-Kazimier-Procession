@@ -7,7 +7,7 @@ import time
 import logging
 
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor
+from twisted.internet import reactor, threads
 
 from txosc import osc
 from txosc import dispatch
@@ -22,12 +22,13 @@ NODES_NUM = 4 #number of nodesList
 NODES_ADDR = [72,3,1] #Number of addresses 24 Pixels * 3 bytes + 3 bytes (RGB sigle color) + 1 byte (PWM LED)
 NODES_SIZE = sum(NODES_ADDR) #total address for the nodes and address
 NODES_MSG = ["RGB","PWM"]
+NUM_UNIVERSES = 9
 class ArtNet(DatagramProtocol):
 
     def __init__(self, nodesServer):
         self.nodesServer = nodesServer
         self.artnetData =[0]* (NODES_NUM * sum(NODES_ADDR)) #allocate memory
-
+        self.universes = []
     def datagramReceived(self, data, (host, port)):
         if ((len(data) > 18) and (data[0:8] == "Art-Net\x00")):
             rawbytes = map(ord, data)
@@ -41,10 +42,18 @@ class ArtNet(DatagramProtocol):
                 net = rawbytes[15]
                 length = (rawbytes[16] << 8) + rawbytes[17]
                 #print "seq %d phy %d sub_net %d uni %d net %d len %d" % (sequence, physical, sub_net, universe, net, length)
-    #                idx = 18
+                #idx = 18
                 #print(rawbytes[18:length+18])
                 self.artnetData[universe*512:universe*512 + 512] = rawbytes[18:length+18] + (512-length)*[0] #chunks of 512
-                self.nodesServer.update(self.artnetData)
+                #checking for all universes before send OSCs packages
+                try:
+                    self.universes.index(universe)
+                except ValueError:
+                    self.universes.append(universe)
+                #if reach the num of universes create thread to send OSCs
+                if len(self.universes) >= NUM_UNIVERSES: 
+                    self.universes = []
+                    threads.deferToThread(self.nodesServer.update, self.artnetData)
                 #print "\n\n"
                 #print self.artnetData
 
@@ -77,7 +86,7 @@ class OSCNodesServer(object):
         for node, (ip, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e: e[1])): #sort by the time of the conection
             #node index
             nodeChunck = self.rgbBytes[node*NODES_SIZE:node*NODES_SIZE + NODES_SIZE]
-            print(ip,nodeChunck)
+            #print(ip,nodeChunck)
             port = data[0]
             oscmsg = osc.Message("/RGB")
             for b in nodeChunck:
