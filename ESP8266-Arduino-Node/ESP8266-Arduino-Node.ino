@@ -10,7 +10,7 @@
 #include <avr/power.h>
 #endif
 
-#define BUTTON 5 //GPIO5
+#define HALLSENSOR 5 //GPIO5
 #define PIN 4  //GPIO4
 #define PWMPIN 0  //GPIO0
 #define NUMPIXELS 48 //48 ws2812 RGB Pixels
@@ -45,7 +45,7 @@ void setup() {
 
   analogWrite(PWMPIN, 255); //inverted PWM, starting OFF 255
 
-  pinMode(BUTTON, INPUT_PULLUP);
+  pinMode(HALLSENSOR, INPUT_PULLUP);
   strip.begin();
 
   Serial.begin(115200);
@@ -144,7 +144,7 @@ void loop() {
     switch (nState) {
       case CONNECT: //send IP to connect and wait for income message
 
-        if (digitalRead(BUTTON) == 0) {
+        if (digitalRead(HALLSENSOR) == 0) {
           Serial.println("Trying to connect...");
           sendMessage("/connect", WiFi.localIP().toString());
           Serial.println("PRESSED");
