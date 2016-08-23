@@ -55,6 +55,7 @@ void setup() {
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pass);
 
   int ledCount = 0;
