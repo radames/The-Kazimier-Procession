@@ -75,6 +75,7 @@ void setup() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  Serial.println(WiFi.macAddress());
 
   Serial.println("Starting UDP");
   Udp.begin(inPort);
@@ -146,7 +147,7 @@ void loop() {
 
         if (digitalRead(HALLSENSOR) == 0) {
           Serial.println("Trying to connect...");
-          sendMessage("/connect", WiFi.localIP().toString());
+          sendMessage("/connect", WiFi.macAddress());
           Serial.println("PRESSED");
           uint16_t i, j;
 

@@ -51,7 +51,7 @@ class ArtNet(DatagramProtocol):
                 except ValueError:
                     self.universes.append(universe)
                 #if reach the num of universes create thread to send OSCs
-                if len(self.universes) >= NUM_UNIVERSES: 
+                if len(self.universes) >= NUM_UNIVERSES:
                     self.universes = []
                     threads.deferToThread(self.nodesServer.update, self.artnetData)
                 #print "\n\n"
@@ -83,11 +83,12 @@ class OSCNodesServer(object):
 
     def update(self, rgbBytes):
         self.rgbBytes = rgbBytes
-        for node, (ip, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e: e[1])): #sort by the time of the conection
+        for node, (macAddr, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e: e[2])): #sort by the time of the conection
             #node index
             nodeChunck = self.rgbBytes[node*NODES_SIZE:node*NODES_SIZE + NODES_SIZE]
             #print(ip,nodeChunck)
-            port = data[0]
+            ip = data[0]
+            port = data[1]
             oscmsg = osc.Message("/RGB")
             for b in nodeChunck:
                 oscmsg.add(b)
@@ -107,7 +108,8 @@ class OSCNodesServer(object):
         print("Got %s from %s" % (message, address))
         ip = address[0]
         port = address[1]
-        self.nodesList[ip] = [port,time.time(), ""]
+        macAddr = Message
+        self.nodesList[macAddr] = [ip, port, time.time()]
         self.sender.send(osc.Message("/connected"), (ip, port))
 
     def ping_handler(self, message, address):
@@ -146,8 +148,9 @@ class OSCNodesServer(object):
 
     def shutdown(self):
         #send disconnect command do nodes
-        for ip, data in self.nodesList.iteritems():
-            port = data[0]
+        for macAddr, data in self.nodesList.iteritems():
+            ip = data[0]
+            port = data[1]
             logging.info("Send disconnect {}".format(ip))
             self.sender.send(osc.Message("/disconnect", True), (ip,port))
             time.sleep(0.5)
