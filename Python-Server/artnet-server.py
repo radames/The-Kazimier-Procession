@@ -18,7 +18,6 @@ FORMAT = '[%(levelname)s] (%(threadName)-10s) %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 # Adjust the LED/ brightness as needed.
-NODES_NUM = 4 #number of nodesList
 NODES_ADDR = [72,3,1] #Number of addresses 24 Pixels * 3 bytes + 3 bytes (RGB sigle color) + 1 byte (PWM LED)
 NODES_SIZE = sum(NODES_ADDR) #total address for the nodes and address
 NODES_MSG = ["RGB","PWM"]
@@ -27,7 +26,7 @@ class ArtNet(DatagramProtocol):
 
     def __init__(self, nodesServer):
         self.nodesServer = nodesServer
-        self.artnetData =[0]* (NODES_NUM * sum(NODES_ADDR)) #allocate memory
+        self.artnetData =[0]*NUM_UNIVERSES*512 #allocate list
         self.universes = []
     def datagramReceived(self, data, (host, port)):
         if ((len(data) > 18) and (data[0:8] == "Art-Net\x00")):
