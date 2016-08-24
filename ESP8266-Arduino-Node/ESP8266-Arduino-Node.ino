@@ -13,7 +13,7 @@
 #define HALLSENSOR 5 //GPIO5
 #define LEDRINGPIN 4  //GPIO4
 #define PWMPIN 0  //GPIO0
-#define NUMPIXELS 24 //48 ws2812 RGB Pixels
+#define NUMPIXELS 48 //48 ws2812 RGB Pixels
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LEDRINGPIN, NEO_GRB + NEO_KHZ800);
 //
@@ -58,12 +58,12 @@ void setup() {
   WiFi.begin(ssid, pass);
 
   while (WiFi.status() != WL_CONNECTED) {
-    noWifiSignalMode();
+    ledPatternMode(false);
     delay(10);
     Serial.print(".");
   }
   Serial.println("");
-  Serial.println("WiFi connected"); 
+  Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   Serial.println(WiFi.macAddress());
@@ -174,13 +174,22 @@ void sendMessage(String address, String data) {
   Udp.endPacket();
   msg.empty();
 }
-  
-void noWifiSignalMode() {
+
+void ledPatternMode(boolean wifi) {
   //rotating,pulsing yellowish fire color
-  int green = abs(sin(millis()/10 * PI/180))*180;
-  int p = abs(sin(millis()/10 * PI/180))*48;
-  for (int i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor((i+p)%strip.numPixels(), strip.Color(250, 20 + i*green/strip.numPixels(), 0));
+  int green = abs(sin(millis() / 10 * PI / 180)) * 180;
+  int p = abs(sin(millis() / 10 * PI / 180)) * 48;
+  //first 24 leds top LED ring
+  for (int i = 0; i < 24; i++) {
+    strip.setPixelColor((i + p) % 24, strip.Color(250, 20 + i * green / 24, 0));
+  }
+  //botton LED RING
+  for (int i = 24; i < 48; i++) {
+    if (wifi) {
+      strip.setPixelColor(i, strip.Color(128, 255, 0));
+    } else {
+      strip.setPixelColor(i, strip.Color(255, 128, 0));
+    }
   }
   strip.show();//update leds
 }
