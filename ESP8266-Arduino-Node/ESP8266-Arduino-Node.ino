@@ -13,7 +13,7 @@
 #define HALLSENSOR 5 //GPIO5
 #define LEDRINGPIN 4  //GPIO4
 #define PWMPIN 0  //GPIO0
-#define NUMPIXELS 48 //48 ws2812 RGB Pixels
+#define NUMPIXELS 24 //48 ws2812 RGB Pixels
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LEDRINGPIN, NEO_GRB + NEO_KHZ800);
 //
@@ -22,7 +22,6 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LEDRINGPIN, NEO_GRB + NEO
 
 WiFiUDP Udp;
 const IPAddress outIp(192, 168, 20, 3);  // remote IP (not needed for receive) kronosServer static IP
-
 
 const unsigned int inPort = 8888;
 const unsigned int outPort = 9999;
@@ -58,21 +57,13 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pass);
 
-  int ledCount = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    ledCount = (ledCount + 1) % strip.numPixels();
-    if (ledCount == 0) {
-      strip.clear();
-      strip.show();
-    }
-    strip.setPixelColor(ledCount, strip.Color(255, 0, 0));
-    strip.show(); // Initialize all pixels to 'off'
-    delay(100);
+    noWifiSignalMode();
+    delay(10);
     Serial.print(".");
   }
   Serial.println("");
-
-  Serial.println("WiFi connected");
+  Serial.println("WiFi connected"); 
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   Serial.println(WiFi.macAddress());
@@ -150,7 +141,7 @@ void loop() {
           sendMessage("/connect", WiFi.macAddress());
           Serial.println("MAGNET DETECTED");
           uint16_t i, j;
-          //magnet detected all leds to RED for 1s 
+          //magnet detected all leds to RED for 1s
           for (i = 0; i < strip.numPixels(); i++) {
             strip.setPixelColor(i, strip.Color(255, 0, 0));
           }
@@ -183,17 +174,14 @@ void sendMessage(String address, String data) {
   Udp.endPacket();
   msg.empty();
 }
-
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if (WheelPos < 85) {
-    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  
+void noWifiSignalMode() {
+  //rotating,pulsing yellowish fire color
+  int green = abs(sin(millis()/10 * PI/180))*180;
+  int p = abs(sin(millis()/10 * PI/180))*48;
+  for (int i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor((i+p)%strip.numPixels(), strip.Color(250, 20 + i*green/strip.numPixels(), 0));
   }
-  if (WheelPos < 170) {
-    WheelPos -= 85;
-    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  strip.show();//update leds
 }
 
