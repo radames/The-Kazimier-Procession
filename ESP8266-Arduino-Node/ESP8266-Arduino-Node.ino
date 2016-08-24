@@ -11,11 +11,11 @@
 #endif
 
 #define HALLSENSOR 5 //GPIO5
-#define PIN 4  //GPIO4
+#define LEDRINGPIN 4  //GPIO4
 #define PWMPIN 0  //GPIO0
 #define NUMPIXELS 48 //48 ws2812 RGB Pixels
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LEDRINGPIN, NEO_GRB + NEO_KHZ800);
 //
 
 // A UDP instance to let us send and receive packets over UDP
