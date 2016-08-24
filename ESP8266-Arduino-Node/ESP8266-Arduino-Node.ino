@@ -28,7 +28,7 @@ const unsigned int outPort = 9999;
 
 OSCErrorCode error;
 unsigned int ledState = HIGH;              // LOW means led is *on*
-
+unsigned int pwmValue = 255;
 //node s
 enum NodeState { CONNECT, WAIT, DISCONNECT };
 
@@ -42,7 +42,7 @@ void setup() {
   analogWriteRange(255);
   analogWriteFreq(200);
 
-  analogWrite(PWMPIN, 255); //inverted PWM, starting OFF 255
+  analogWrite(PWMPIN, pwmValue); //inverted PWM, starting OFF 255
 
   pinMode(HALLSENSOR, INPUT_PULLUP);
   strip.begin();
@@ -108,10 +108,11 @@ void loop() {
           digitalWrite(BUILTIN_LED, 1); //OFF
           strip.clear();
           strip.show(); // Initialize all pixels to 'off'
-          analogWrite(PWMPIN, 255); //inverted PWM, starting OFF 255
+          pwmValue = 255;
+          analogWrite(PWMPIN, pwmValue); //inverted PWM, starting OFF 255
         }
       } else if (oscMessage.fullMatch("/RGB")) {
-        //overrides Magnet state, in case of the assignement is already made and kept on server 
+        //overrides Magnet state, in case of the assignement is already made and kept on server
         if (nState != WAIT) {
           nState = WAIT;
         }
@@ -137,7 +138,8 @@ void loop() {
         strip.show(); // Initialize all pixels to 'off'
         //last byte address number 75
         int PWM = oscMessage.getInt(pixelByte + 3); //last BYTE is PWM
-        analogWrite(PWMPIN, 255 - PWM);
+        pwmValue = 255 - PWM;
+        analogWrite(PWMPIN, pwmValue);
       }
 
     }
@@ -208,6 +210,11 @@ void ledPatternMode(boolean wifi) {
       strip.setPixelColor(i, strip.Color(250, 80, 0)); //first ring
       strip.setPixelColor(24 + i, strip.Color(250, 80, 0)); //second ring
     }
+  }
+  //turn off PWM pin only once
+  if (pwmValue != 255) {
+    pwmValue = 255;
+    analogWrite(PWMPIN, pwmValue); //inverted PWM, starting OFF 255
   }
 
   strip.show();//update leds
