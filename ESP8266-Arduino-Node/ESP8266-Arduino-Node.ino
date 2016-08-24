@@ -81,76 +81,91 @@ void setup() {
 }
 
 void loop() {
-  OSCMessage oscMessage;
-  int size = Udp.parsePacket();
-  if (size > 0) {
-    while (size--) {
-      oscMessage.fill(Udp.read());
-    }
-    if (oscMessage.fullMatch("/connected")) {
-      boolean response = oscMessage.getBoolean(0);
-      if (response) {
-        nState = WAIT;
-        digitalWrite(BUILTIN_LED, 0); //ON
-      }
-    } else if (oscMessage.fullMatch("/disconnect")) {
-      boolean response = oscMessage.getBoolean(0);
-      if (response) {
-        nState = DISCONNECT;
-        digitalWrite(BUILTIN_LED, 1); //OFF
-        strip.clear();
-        strip.show(); // Initialize all pixels to 'off'
-        analogWrite(PWMPIN, 255); //inverted PWM, starting OFF 255
-      }
-    } else if (oscMessage.fullMatch("/RGB")) { //
+  //if not WIFI present, wait with signal
+  if (WiFi.status() != WL_CONNECTED) {
 
-      int pixelByte = 0;
-      //first 24 pixels with the first 72 bytes
-      while (pixelByte < 24 * 3) {
+    ledPatternMode(false);
+    delay(10);
+
+  } else {
+
+    OSCMessage oscMessage;
+    int size = Udp.parsePacket();
+    if (size > 0) {
+      while (size--) {
+        oscMessage.fill(Udp.read());
+      }
+      if (oscMessage.fullMatch("/connected")) {
+        boolean response = oscMessage.getBoolean(0);
+        if (response) {
+          nState = WAIT;
+          digitalWrite(BUILTIN_LED, 0); //ON
+        }
+      } else if (oscMessage.fullMatch("/disconnect")) {
+        boolean response = oscMessage.getBoolean(0);
+        if (response) {
+          nState = DISCONNECT;
+          digitalWrite(BUILTIN_LED, 1); //OFF
+          strip.clear();
+          strip.show(); // Initialize all pixels to 'off'
+          analogWrite(PWMPIN, 255); //inverted PWM, starting OFF 255
+        }
+      } else if (oscMessage.fullMatch("/RGB")) { //
+
+        int pixelByte = 0;
+        //first 24 pixels with the first 72 bytes
+        while (pixelByte < 24 * 3) {
+          int r = oscMessage.getInt(pixelByte);
+          int g = oscMessage.getInt(pixelByte + 1);
+          int b = oscMessage.getInt(pixelByte + 2);
+          strip.setPixelColor(pixelByte / 3, strip.Color(r, g, b));
+          pixelByte += 3;
+        }
+        //next 3 bytes define the LED ring color
         int r = oscMessage.getInt(pixelByte);
         int g = oscMessage.getInt(pixelByte + 1);
         int b = oscMessage.getInt(pixelByte + 2);
-        strip.setPixelColor(pixelByte / 3, strip.Color(r, g, b));
-        pixelByte += 3;
-      }
-      //next 3 bytes define the LED ring color
-      int r = oscMessage.getInt(pixelByte);
-      int g = oscMessage.getInt(pixelByte + 1);
-      int b = oscMessage.getInt(pixelByte + 2);
 
-      //set all 24 ws2812 pixels to the a sigle color
-      for (int i = 0; i < 24; i++) {
-        strip.setPixelColor(24 + i, strip.Color(r, g, b));
+        //set all 24 ws2812 pixels to the a sigle color
+        for (int i = 0; i < 24; i++) {
+          strip.setPixelColor(24 + i, strip.Color(r, g, b));
+        }
+        strip.show(); // Initialize all pixels to 'off'
+        //last byte address number 75
+        int PWM = oscMessage.getInt(pixelByte + 3); //last BYTE is PWM
+        analogWrite(PWMPIN, 255 - PWM);
       }
-      strip.show(); // Initialize all pixels to 'off'
-      //last byte address number 75
-      int PWM = oscMessage.getInt(pixelByte + 3); //last BYTE is PWM
-      analogWrite(PWMPIN, 255 - PWM);
+
     }
 
-  }
+    //sampling every 1s
 
-  //sampling every 1s
-  if (millis() - lastMillis > 1000) {
-    lastMillis = millis();
     switch (nState) {
       case CONNECT: //send IP to connect and wait for income message
 
         if (digitalRead(HALLSENSOR) == 0) {
-          Serial.println("Trying to connect...");
-          sendMessage("/connect", WiFi.macAddress());
-          Serial.println("MAGNET DETECTED");
-          uint16_t i, j;
-          //magnet detected all leds to RED for 1s
-          for (i = 0; i < strip.numPixels(); i++) {
-            strip.setPixelColor(i, strip.Color(255, 0, 0));
+          //if magnet is present, send OSC every 500 until is connected
+          if (millis() - lastMillis > 500) {
+            lastMillis = millis();
+
+            Serial.println("Trying to connect...");
+            sendMessage("/connect", WiFi.macAddress());
+            Serial.println("MAGNET DETECTED");
+            uint16_t i, j;
+            //magnet detected all leds to RED for 1s
+            for (i = 0; i < strip.numPixels(); i++) {
+              strip.setPixelColor(i, strip.Color(255, 0, 0));
+            }
+            strip.show();
+            delay(500);
+
+            strip.clear();
+            strip.show(); // Initialize all pixels to 'off'
           }
-          strip.show();
-          delay(1000);
 
-          strip.clear();
-          strip.show(); // Initialize all pixels to 'off'
-
+        } else {
+          //if magnet is not present, led pattern mode wifi wifi true
+          ledPatternMode(true);
         }
         break;
       case WAIT:
@@ -162,6 +177,7 @@ void loop() {
         nState = CONNECT; //back to wait
         break;
     }
+
   }
 }
 
@@ -181,16 +197,15 @@ void ledPatternMode(boolean wifi) {
   int p = abs(sin(millis() / 10 * PI / 180)) * 48;
   //first 24 leds top LED ring
   for (int i = 0; i < 24; i++) {
-    strip.setPixelColor((i + p) % 24, strip.Color(250, 20 + i * green / 24, 0));
-  }
-  //botton LED RING
-  for (int i = 24; i < 48; i++) {
-    if (wifi) {
-      strip.setPixelColor(i, strip.Color(128, 255, 0));
+    if (!wifi) {
+      strip.setPixelColor((i + p) % 24, strip.Color(250, 20 + i * green / 24, 0)); //first ring
+      strip.setPixelColor(48 - (25 + (i + p) % 24), strip.Color(250, 20 + i * green / 24, 0)); //second ring is mirrored
     } else {
-      strip.setPixelColor(i, strip.Color(255, 128, 0));
+      strip.setPixelColor(i, strip.Color(250, 80, 0)); //first ring
+      strip.setPixelColor(24 + i, strip.Color(250, 80, 0)); //second ring
     }
   }
+
   strip.show();//update leds
 }
 
