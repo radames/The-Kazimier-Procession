@@ -193,8 +193,8 @@ void sendMessage(String address, String data) {
 
 void ledPatternMode(boolean wifi) {
   //rotating,pulsing yellowish fire color
-  int green = abs(sin(millis() / 10 * PI / 180)) * 180;
-  int p = abs(sin(millis() / 10 * PI / 180)) * 48;
+  int green = abs(sin(millis() / 20 * PI / 180)) * 180;
+  int p = 0;
   //first 24 leds top LED ring
   for (int i = 0; i < 24; i++) {
     if (!wifi) {
