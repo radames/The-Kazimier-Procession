@@ -110,7 +110,11 @@ void loop() {
           strip.show(); // Initialize all pixels to 'off'
           analogWrite(PWMPIN, 255); //inverted PWM, starting OFF 255
         }
-      } else if (oscMessage.fullMatch("/RGB")) { //
+      } else if (oscMessage.fullMatch("/RGB")) {
+        //overrides Magnet state, in case of the assignement is already made and kept on server 
+        if (nState != WAIT) {
+          nState = WAIT;
+        }
 
         int pixelByte = 0;
         //first 24 pixels with the first 72 bytes
