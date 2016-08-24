@@ -128,7 +128,7 @@ void loop() {
       int b = oscMessage.getInt(pixelByte + 2);
 
       //set all 24 ws2812 pixels to the a sigle color
-      for(int i = 0; i < 24; i++){
+      for (int i = 0; i < 24; i++) {
         strip.setPixelColor(24 + i, strip.Color(r, g, b));
       }
       strip.show(); // Initialize all pixels to 'off'
@@ -148,16 +148,15 @@ void loop() {
         if (digitalRead(HALLSENSOR) == 0) {
           Serial.println("Trying to connect...");
           sendMessage("/connect", WiFi.macAddress());
-          Serial.println("PRESSED");
+          Serial.println("MAGNET DETECTED");
           uint16_t i, j;
-
-          for (j = 0; j < 256; j++) {
-            for (i = 0; i < strip.numPixels(); i++) {
-              strip.setPixelColor(i, Wheel((i + j) & 255));
-            }
-            strip.show();
-            delay(10);
+          //magnet detected all leds to RED for 1s 
+          for (i = 0; i < strip.numPixels(); i++) {
+            strip.setPixelColor(i, strip.Color(255, 0, 0));
           }
+          strip.show();
+          delay(1000);
+
           strip.clear();
           strip.show(); // Initialize all pixels to 'off'
 
