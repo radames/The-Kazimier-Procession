@@ -91,7 +91,7 @@ class OSCNodesServer(object):
         self.receiver.fallback = self.fallback
         #send pings to nodes in case of they're saved in the file
         if not self.nodesList == {}:
-            for macAddr, data in self.nodesList.iteritems():
+          for node, (macAddr, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])): #sort by the time of the conection
                 ip = data[0]
                 port = self.send_port
                 logging.info("Send Alive {} {}".format(ip,macAddr))
@@ -125,6 +125,7 @@ class OSCNodesServer(object):
         logging.info("I'm alive {} {} {}".format(ip,port,macAddr))
         #update only IP and
         self.nodesList[macAddr][0:2] = [ip,port]
+        pprint.pprint(self.nodesList)
 
     def connect(self, message, address):
         """
@@ -150,10 +151,9 @@ class OSCNodesServer(object):
         lFile = open("nodesList.dat", "wb")
         pickle.dump(self.nodesList, lFile)
         lFile.close()
-
-        for macAddr, data in self.nodesList.iteritems():
+        #send disconnect in ordered way
+        for node, (macAddr, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])): #sort by the time of the conection
             ip = data[0]
-#            port = data[1]
             port = self.send_port
             logging.info("Send disconnect {} {}".format(ip,macAddr))
             self.sender.send(osc.Message("/disconnect", True), (ip,port))
