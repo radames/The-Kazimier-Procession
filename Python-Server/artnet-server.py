@@ -87,10 +87,7 @@ class OSCNodesServer(object):
         logging.info("Listening on osc.udp://localhost: {}".format(self.receive_port))
 
         self.receiver.addCallback("/connect", self.connect)
-        self.receiver.addCallback("/ping", self.ping_handler)
-        self.receiver.addCallback("/pong", self.pong_handler)
         self.receiver.fallback = self.fallback
-        reactor.callLater(0.1, self._start)
 
     def update(self, rgbBytes):
         self.rgbBytes = rgbBytes
@@ -106,12 +103,6 @@ class OSCNodesServer(object):
             logging.info("Sending OSC message to {}".format(ip))
             self.sender.send(oscmsg, (ip,port))
 
-    def _start(self):
-        """
-        Initiates the ping pong game.
-        """
-        self._send_ping()
-
     def connect(self, message, address):
         """
         Method handler for /connect, new node
@@ -123,34 +114,6 @@ class OSCNodesServer(object):
         self.nodesList[macAddr] = [ip, port, time.time()]
         print(self.nodesList)
         self.sender.send(osc.Message("/connected"), (ip, port))
-
-    def ping_handler(self, message, address):
-        """
-        Method handler for /ping
-        """
-        print("Got %s from %s" % (message, address))
-        reactor.callLater(self.delay, self._send_pong)
-
-    def pong_handler(self, message, address):
-        """
-        Method handler for /pong
-        """
-        print("Got %s from %s" % (message, address))
-        reactor.callLater(self.delay, self._send_ping)
-
-    def _send_ping(self):
-        """
-        Sends /ping
-        """
-        self.sender.send(osc.Message("/ping"), (self.send_host, self.send_port))
-        print("Sent /ping")
-
-    def _send_pong(self):
-        """
-        Sends /pong
-        """
-        self.sender.send(osc.Message("/pong"), (self.send_host, self.send_port))
-        print("Sent /pong")
 
     def fallback(self, message, address):
         """
