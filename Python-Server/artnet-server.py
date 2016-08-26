@@ -87,7 +87,16 @@ class OSCNodesServer(object):
         logging.info("Listening on osc.udp://localhost: {}".format(self.receive_port))
 
         self.receiver.addCallback("/connect", self.connect)
+        self.receiver.addCallback("/alive", self.alive)
         self.receiver.fallback = self.fallback
+        #send pings to nodes in case of they're saved in the file
+        if not self.nodesList == {}:
+            for macAddr, data in self.nodesList.iteritems():
+                ip = data[0]
+                port = self.send_port
+                logging.info("Send Alive {} {}".format(ip,macAddr))
+                self.sender.send(osc.Message("/isAlive", macAddr), (ip,port))
+                time.sleep(0.1)
 
     def update(self, rgbBytes):
         self.rgbBytes = rgbBytes
@@ -96,12 +105,26 @@ class OSCNodesServer(object):
             nodeChunck = self.rgbBytes[node*NODES_SIZE:node*NODES_SIZE + NODES_SIZE]
             #print(ip,nodeChunck)
             ip = data[0]
-            port = data[1]
+            port = self.send_port
+#            port = data[1]
             oscmsg = osc.Message("/RGB")
             for b in nodeChunck:
                 oscmsg.add(b)
             logging.info("Sending OSC message to {}".format(ip))
             self.sender.send(oscmsg, (ip,port))
+
+    def alive(self, message, address):
+        """
+        Alive response form the nodes,
+        update port connection
+        """
+        ip = address[0]
+#        port = address[1]
+        port = self.send_port
+        macAddr = message.getValues()[0]
+        logging.info("I'm alive {} {} {}".format(ip,port,macAddr))
+        #update only IP and
+        self.nodesList[macAddr][0:2] = [ip,port]
 
     def connect(self, message, address):
         """
@@ -109,7 +132,8 @@ class OSCNodesServer(object):
         """
         print("Got %s from %s" % (message, address))
         ip = address[0]
-        port = address[1]
+#        port = address[1]
+        port = self.send_port
         macAddr = message.getValues()[0]
         self.nodesList[macAddr] = [ip, port, time.time()]
         pprint.pprint(self.nodesList)
@@ -129,10 +153,11 @@ class OSCNodesServer(object):
 
         for macAddr, data in self.nodesList.iteritems():
             ip = data[0]
-            port = data[1]
-            logging.info("Send disconnect {}".format(ip))
+#            port = data[1]
+            port = self.send_port
+            logging.info("Send disconnect {} {}".format(ip,macAddr))
             self.sender.send(osc.Message("/disconnect", True), (ip,port))
-            time.sleep(0.5)
+            time.sleep(0.1)
 
 
 if __name__ == "__main__":
