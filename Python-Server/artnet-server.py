@@ -5,7 +5,8 @@
 
 import time
 import logging
-
+import cPickle as pickle
+import pprint
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor, threads
 
@@ -65,7 +66,18 @@ class OSCNodesServer(object):
         self.send_host = "127.0.0.1"
         self.send_port = 8888
         self.receive_port = 9999
-        self.nodesList = {}
+        try:
+            logging.info("Open File with nodes information")
+            lFile = open("nodesList.dat", "rb")
+            self.nodesList = pickle.load(lFile)
+        except IOError:
+            logging.error("File doesn't exist, creating a new one")
+            lFile = open("nodesList.dat", "wb")
+            pickle.dump({},lFile)
+            lFile.close()
+            self.nodesList = {}
+
+        pprint.pprint(self.nodesList)
         self.rgbBytes = []
         self.receiver = dispatch.Receiver()
         self.sender = async.DatagramClientProtocol()
@@ -148,6 +160,10 @@ class OSCNodesServer(object):
 
     def shutdown(self):
         #send disconnect command do nodes
+        lFile = open("nodesList.dat", "wb")
+        pickle.dump(self.nodesList, lFile)
+        lFile.close()
+
         for macAddr, data in self.nodesList.iteritems():
             ip = data[0]
             port = data[1]
