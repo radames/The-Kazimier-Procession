@@ -95,7 +95,10 @@ class OSCNodesServer(object):
                 ip = data[0]
                 port = self.send_port
                 logging.info("Send Alive {} {}".format(ip,macAddr))
-                self.sender.send(osc.Message("/isAlive", macAddr), (ip,port))
+                try:
+                    self.sender.send(osc.Message("/isAlive", macAddr), (ip,port))
+                except:
+                    print "Error on ",ip,port
                 time.sleep(0.1)
 
     def update(self, rgbBytes):
@@ -111,7 +114,11 @@ class OSCNodesServer(object):
             for b in nodeChunck:
                 oscmsg.add(b)
             #logging.info("Sending OSC message to {}".format(ip))
-            self.sender.send(oscmsg, (ip,port))
+            try:
+                self.sender.send(oscmsg, (ip,port))
+            except:
+                pass
+                #print "Error on ",ip,port
 
     def alive(self, message, address):
         """
@@ -156,7 +163,10 @@ class OSCNodesServer(object):
             ip = data[0]
             port = self.send_port
             logging.info("Send disconnect {} {}".format(ip,macAddr))
-            self.sender.send(osc.Message("/disconnect", True), (ip,port))
+            try:
+                self.sender.send(osc.Message("/disconnect", True), (ip,port))
+            except:
+                print "Error on ",ip,port
             time.sleep(0.1)
 
 
