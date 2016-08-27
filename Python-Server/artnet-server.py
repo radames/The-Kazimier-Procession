@@ -125,7 +125,7 @@ class OSCNodesServer(object):
         logging.info("I'm alive {} {} {}".format(ip,port,macAddr))
         #update only IP and
         self.nodesList[macAddr][0:2] = [ip,port]
-        pprint.pprint(self.nodesList)
+        #pprint.pprint(self.nodesList)
 
     def connect(self, message, address):
         """
