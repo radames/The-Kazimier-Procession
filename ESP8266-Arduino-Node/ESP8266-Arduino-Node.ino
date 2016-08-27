@@ -72,11 +72,8 @@ void setup() {
   Udp.begin(inPort);
   Serial.print("Local port: ");
   Serial.println(Udp.localPort());
-
-
-  strip.clear();
-  strip.show(); // Initialize all pixels to 'off'
-
+  
+  turnOffLights();
 
 }
 
@@ -106,10 +103,7 @@ void loop() {
         if (response) {
           nState = DISCONNECT;
           digitalWrite(BUILTIN_LED, 1); //OFF
-          strip.clear();
-          strip.show(); // Initialize all pixels to 'off'
-          pwmValue = 255;
-          analogWrite(PWMPIN, pwmValue); //inverted PWM, starting OFF 255
+          turnOffLights();
         }
       } else if (oscMessage.fullMatch("/isAlive")) {
         //Respond alive if get this message
@@ -117,7 +111,8 @@ void loop() {
         sendMessage("/alive", WiFi.macAddress());
         nState = WAIT;
         digitalWrite(BUILTIN_LED, 0); //ON LED back to ON
-        
+        turnOffLights();
+
       } else if (oscMessage.fullMatch("/RGB")) {
         //overrides Magnet state, in case of the assignement is already made and kept on server
         if (nState != WAIT) {
@@ -192,6 +187,13 @@ void loop() {
     }
 
   }
+}
+
+void turnOffLights() {
+  strip.clear();
+  strip.show(); // Initialize all pixels to 'off'
+  pwmValue = 255;
+  analogWrite(PWMPIN, pwmValue); //inverted PWM, starting OFF 255
 }
 
 
