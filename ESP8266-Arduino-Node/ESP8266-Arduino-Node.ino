@@ -173,7 +173,7 @@ void loop() {
 
         } else {
           //if magnet is not present, led pattern mode wifi wifi true
-          ledPatternMode(true);
+          ledPatternMode(false);
         }
         break;
       case WAIT:
@@ -214,7 +214,7 @@ void ledPatternMode(boolean wifi) {
   for (int i = 0; i < 24; i++) {
     if (!wifi) {
       strip.setPixelColor((i + p) % 24, strip.Color(250, 20 + i * green / 24, 0)); //first ring
-      strip.setPixelColor(48 - (25 + (i + p) % 24), strip.Color(250, 20 + i * green / 24, 0)); //second ring is mirrored
+      strip.setPixelColor(24 + i, strip.Color(250, 20 + i * green / 24, 0)); //second ring is mirrored
     } else {
       strip.setPixelColor(i, strip.Color(250, 80, 0)); //first ring
       strip.setPixelColor(24 + i, strip.Color(250, 80, 0)); //second ring
