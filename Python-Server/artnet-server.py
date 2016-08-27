@@ -110,7 +110,7 @@ class OSCNodesServer(object):
             oscmsg = osc.Message("/RGB")
             for b in nodeChunck:
                 oscmsg.add(b)
-            logging.info("Sending OSC message to {}".format(ip))
+            #logging.info("Sending OSC message to {}".format(ip))
             self.sender.send(oscmsg, (ip,port))
 
     def alive(self, message, address):
