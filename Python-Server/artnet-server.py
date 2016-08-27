@@ -145,7 +145,11 @@ class OSCNodesServer(object):
         macAddr = message.getValues()[0]
         self.nodesList[macAddr] = [ip, port, time.time()]
         pprint.pprint(self.nodesList)
-        self.sender.send(osc.Message("/connected"), (ip, port))
+        try:
+            self.sender.send(osc.Message("/connected"), (ip, port))
+        except:
+            print "Error on ",ip,port
+
 
     def fallback(self, message, address):
         """
