@@ -22,7 +22,8 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 NODES_ADDR = [72,3,1] #Number of addresses 24 Pixels * 3 bytes + 3 bytes (RGB sigle color) + 1 byte (PWM LED)
 NODES_SIZE = sum(NODES_ADDR) #total address for the nodes and address
 NODES_MSG = ["RGB","PWM"]
-NUM_UNIVERSES = 9
+NODES_UNI_SIZE = int(512/NODES_SIZE)
+NUM_UNIVERSES = 1
 class ArtNet(DatagramProtocol):
 
     def __init__(self, nodesServer):
@@ -41,19 +42,19 @@ class ArtNet(DatagramProtocol):
                 universe = rawbytes[14] & 0x0F
                 net = rawbytes[15]
                 length = (rawbytes[16] << 8) + rawbytes[17]
-                #print "seq %d phy %d sub_net %d uni %d net %d len %d" % (sequence, physical, sub_net, universe, net, length)
+#                print "seq %d phy %d sub_net %d uni %d net %d len %d" % (sequence, physical, sub_net, universe, net, length)
                 #idx = 18
                 #print(rawbytes[18:length+18])
                 self.artnetData[universe*512:universe*512 + 512] = rawbytes[18:length+18] + (512-length)*[0] #chunks of 512
-                #checking for all universes before send OSCs packages
-                try:
-                    self.universes.index(universe)
-                except ValueError:
-                    self.universes.append(universe)
-                #if reach the num of universes create thread to send OSCs
-                if len(self.universes) >= NUM_UNIVERSES:
-                    self.universes = []
-                    threads.deferToThread(self.nodesServer.update, self.artnetData)
+                threads.deferToThread(self.nodesServer.update, self.artnetData, universe)                #checking for all universes before send OSCs packages
+#                try:
+#                    self.universes.index(universe)
+#                except ValueError:
+#                    self.universes.append(universe)
+#                #if reach the num of universes create thread to send OSCs
+#                if len(self.universes) >= NUM_UNIVERSES:
+#                    self.universes = []
+#                    threads.deferToThread(self.nodesServer.update, self.artnetData)
                 #print "\n\n"
                 #print self.artnetData
 
@@ -101,13 +102,13 @@ class OSCNodesServer(object):
                     print "Error on ",ip,port
                 time.sleep(0.1)
 
-    def update(self, rgbBytes):
+    def update(self, rgbBytes, universe):
         self.rgbBytes = rgbBytes
-        for node, (macAddr, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])): #sort by the time of the conection
-            #node index
-            nodeChunck = self.rgbBytes[node*NODES_SIZE:node*NODES_SIZE + NODES_SIZE]
-            #print(ip,nodeChunck)
-            ip = data[0]
+        nodes = sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])
+        for ind, node in enumerate(nodes[universe*NODES_UNI_SIZE:universe*NODES_UNI_SIZE + NODES_UNI_SIZE]):
+            nodeID =  ind + universe*NODES_UNI_SIZE
+            nodeChunck = self.rgbBytes[nodeID*NODES_SIZE:nodeID*NODES_SIZE + NODES_SIZE]
+            ip = node[1][0]
             port = self.send_port
 #            port = data[1]
             oscmsg = osc.Message("/RGB")
