@@ -72,7 +72,7 @@ void setup() {
   Udp.begin(inPort);
   Serial.print("Local port: ");
   Serial.println(Udp.localPort());
-  
+
   turnOffLights();
 
 }
@@ -173,7 +173,7 @@ void loop() {
 
         } else {
           //if magnet is not present, led pattern mode wifi wifi true
-          ledPatternMode(false);
+          ledPatternMode(true);
         }
         break;
       case WAIT:
@@ -208,18 +208,27 @@ void sendMessage(String address, String data) {
 
 void ledPatternMode(boolean wifi) {
   //rotating,pulsing yellowish fire color
-  int green = abs(sin(millis() / 20 * PI / 180)) * 180;
-  int p = 0;
+  int green = abs(sin(millis() / 20 * PI / 180)) * 30;
+  int whiteP = int(millis() / 90) % 24;
+
   //first 24 leds top LED ring
   for (int i = 0; i < 24; i++) {
     if (!wifi) {
-      strip.setPixelColor((i + p) % 24, strip.Color(250, 20 + i * green / 24, 0)); //first ring
-      strip.setPixelColor(24 + i, strip.Color(250, 20 + i * green / 24, 0)); //second ring is mirrored
+      strip.setPixelColor(i % 24, strip.Color(255, green, 0)); //first ring
+      strip.setPixelColor(24 + i, strip.Color(255, green, 0)); //second ring is mirrored
     } else {
-      strip.setPixelColor(i, strip.Color(250, 80, 0)); //first ring
-      strip.setPixelColor(24 + i, strip.Color(250, 80, 0)); //second ring
+      strip.setPixelColor(i, strip.Color(50 + green*6, 0, 0)); //first ring
+      strip.setPixelColor(24 + i, strip.Color(50 + green*6, 0, 0)); //second ring
     }
   }
+  if (!wifi) {
+    for (int i = 0; i < 2; i++) {
+      strip.setPixelColor((whiteP + 12 * i) % 24, strip.Color(green * 8, green * 8, green * 8)); //first ring
+      strip.setPixelColor(24 + (whiteP + 12 * i) % 24, strip.Color(green * 8, green * 8, green * 8)); //second ring
+    }
+  }
+
+
   //turn off PWM pin only once
   if (pwmValue != 255) {
     pwmValue = 255;
