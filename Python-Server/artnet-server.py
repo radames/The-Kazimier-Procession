@@ -23,7 +23,7 @@ NODES_ADDR = [72,3,1] #Number of addresses 24 Pixels * 3 bytes + 3 bytes (RGB si
 NODES_SIZE = sum(NODES_ADDR) #total address for the nodes and address
 NODES_MSG = ["RGB","PWM"]
 NODES_UNI_SIZE = int(512/NODES_SIZE)
-NUM_UNIVERSES = 1
+NUM_UNIVERSES = 9
 class ArtNet(DatagramProtocol):
 
     def __init__(self, nodesServer):
@@ -105,7 +105,7 @@ class OSCNodesServer(object):
     def update(self, rgbBytes, universe):
         self.rgbBytes = rgbBytes
         nodes = sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])
-        for ind, node in enumerate(nodes[universe*NODES_UNI_SIZE:universe*NODES_UNI_SIZE + NODES_UNI_SIZE]):
+        for ind, node in enumerate(nodes[universe*7:universe*7 + 7]):
             nodeID =  ind + universe*NODES_UNI_SIZE
             nodeChunck = self.rgbBytes[nodeID*NODES_SIZE:nodeID*NODES_SIZE + NODES_SIZE]
             ip = node[1][0]
