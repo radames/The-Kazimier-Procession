@@ -7,13 +7,14 @@ import time
 import logging
 import cPickle as pickle
 import pprint
+from collections import OrderedDict
+
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor, threads
 
 from txosc import osc
 from txosc import dispatch
 from txosc import async
-
 
 FORMAT = '[%(levelname)s] (%(threadName)-10s) %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -58,15 +59,17 @@ class OSCNodesServer(object):
         try:
             logging.info("Open File with nodes information")
             lFile = open("nodesList.dat", "rb")
-            self.nodesList = pickle.load(lFile)
+            nodes = pickle.load(lFile)
+            #Ordered Dictionary with the nodes position
+            self.nodesList = OrderedDict(sorted(nodes.iteritems(), key = lambda e:e[1][2]))
         except IOError:
             logging.error("File doesn't exist, creating a new one")
             lFile = open("nodesList.dat", "wb")
             pickle.dump({},lFile)
             lFile.close()
-            self.nodesList = {}
+            self.nodesList = OrderedDict()
 
-        pprint.pprint(self.nodesList)
+        pprint.pprint(self.nodesList.items())
         self.rgbBytes = [0]*NUM_UNIVERSES*512 #allocate list
         self.receiver = dispatch.Receiver()
         self.sender = async.DatagramClientProtocol()
@@ -80,7 +83,7 @@ class OSCNodesServer(object):
         self.receiver.fallback = self.fallback
         #send pings to nodes in case of they're saved in the file
         if not self.nodesList == {}:
-          for node, (macAddr, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])): #sort by the time of the conection
+          for node, (macAddr, data) in enumerate(self.nodesList.iteritems()): #sort by the time of the conection
                 ip = data[0]
                 port = self.send_port
                 logging.info("Send Alive {} {}".format(ip,macAddr))
@@ -92,7 +95,7 @@ class OSCNodesServer(object):
 
     def update(self, universeBytes, universe):
         self.rgbBytes[universe*512:universe*512 + 512] = universeBytes
-        nodes = sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])
+        nodes = self.nodesList.items()
         for ind, node in enumerate(nodes[universe*7:universe*7 + 7]):
             nodeID =  ind + universe*NODES_UNI_SIZE
             nodeChunck = self.rgbBytes[nodeID*NODES_SIZE:nodeID*NODES_SIZE + NODES_SIZE]
@@ -132,8 +135,10 @@ class OSCNodesServer(object):
 #        port = address[1]
         port = self.send_port
         macAddr = message.getValues()[0]
+        #update ip and port
         self.nodesList[macAddr] = [ip, port, time.time()]
-        pprint.pprint(self.nodesList)
+        self.nodesList = OrderedDict(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2]))
+        #pprint.pprint(self.nodesList[macAddr])
         try:
             self.sender.send(osc.Message("/connected"), (ip, port))
         except:
@@ -152,7 +157,7 @@ class OSCNodesServer(object):
         pickle.dump(self.nodesList, lFile)
         lFile.close()
         #send disconnect in ordered way
-        for node, (macAddr, data) in enumerate(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])): #sort by the time of the conection
+        for node, (macAddr, data) in enumerate(self.nodesList.iteritems()): #sort by the time of the conection
             ip = data[0]
             port = self.send_port
             logging.info("Send disconnect {} {}".format(ip,macAddr))
