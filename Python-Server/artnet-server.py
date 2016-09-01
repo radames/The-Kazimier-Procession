@@ -28,8 +28,6 @@ class ArtNet(DatagramProtocol):
 
     def __init__(self, nodesServer):
         self.nodesServer = nodesServer
-        self.artnetData =[0]*NUM_UNIVERSES*512 #allocate list
-        self.universes = []
     def datagramReceived(self, data, (host, port)):
         if ((len(data) > 18) and (data[0:8] == "Art-Net\x00")):
             rawbytes = map(ord, data)
@@ -45,18 +43,8 @@ class ArtNet(DatagramProtocol):
 #                print "seq %d phy %d sub_net %d uni %d net %d len %d" % (sequence, physical, sub_net, universe, net, length)
                 #idx = 18
                 #print(rawbytes[18:length+18])
-                self.artnetData[universe*512:universe*512 + 512] = rawbytes[18:length+18] + (512-length)*[0] #chunks of 512
-                threads.deferToThread(self.nodesServer.update, self.artnetData, universe)                #checking for all universes before send OSCs packages
-#                try:
-#                    self.universes.index(universe)
-#                except ValueError:
-#                    self.universes.append(universe)
-#                #if reach the num of universes create thread to send OSCs
-#                if len(self.universes) >= NUM_UNIVERSES:
-#                    self.universes = []
-#                    threads.deferToThread(self.nodesServer.update, self.artnetData)
-                #print "\n\n"
-                #print self.artnetData
+                universeBytes = rawbytes[18:length+18] + (512-length)*[0] #chunks of 512
+                threads.deferToThread(self.nodesServer.update, universeBytes, universe)                #checking for all universes before send OSCs packages
 
 class OSCNodesServer(object):
     """
@@ -79,7 +67,7 @@ class OSCNodesServer(object):
             self.nodesList = {}
 
         pprint.pprint(self.nodesList)
-        self.rgbBytes = []
+        self.rgbBytes = [0]*NUM_UNIVERSES*512 #allocate list
         self.receiver = dispatch.Receiver()
         self.sender = async.DatagramClientProtocol()
         self._sender_port = reactor.listenUDP(0, self.sender)
@@ -102,8 +90,8 @@ class OSCNodesServer(object):
                     print "Error on ",ip,port
                 time.sleep(0.1)
 
-    def update(self, rgbBytes, universe):
-        self.rgbBytes = rgbBytes
+    def update(self, universeBytes, universe):
+        self.rgbBytes[universe*512:universe*512 + 512] = universeBytes
         nodes = sorted(self.nodesList.iteritems(), key = lambda e:e[1][2])
         for ind, node in enumerate(nodes[universe*7:universe*7 + 7]):
             nodeID =  ind + universe*NODES_UNI_SIZE
