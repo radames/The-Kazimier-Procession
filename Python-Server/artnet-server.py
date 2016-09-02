@@ -8,6 +8,7 @@ import logging
 import cPickle as pickle
 import pprint
 from collections import OrderedDict
+from math import ceil
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor, threads
@@ -23,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 NODES_ADDR = [72,3,1] #Number of addresses 24 Pixels * 3 bytes + 3 bytes (RGB sigle color) + 1 byte (PWM LED)
 NODES_SIZE = sum(NODES_ADDR) #total address for the nodes and address
 NODES_MSG = ["RGB","PWM"]
-NODES_UNI_SIZE = int(512/NODES_SIZE)
+NODES_UNI_SIZE = int(ceil(512.0/NODES_SIZE))
 NUM_UNIVERSES = 9
 class ArtNet(DatagramProtocol):
 
@@ -96,7 +97,7 @@ class OSCNodesServer(object):
     def update(self, universeBytes, universe):
         self.rgbBytes[universe*512:universe*512 + 512] = universeBytes
         nodes = self.nodesList.items()
-        for ind, node in enumerate(nodes[universe*7:universe*7 + 7]):
+        for ind, node in enumerate(nodes[universe*NODES_UNI_SIZE:universe*NODES_UNI_SIZE + NODES_UNI_SIZE]):
             nodeID =  ind + universe*NODES_UNI_SIZE
             nodeChunck = self.rgbBytes[nodeID*NODES_SIZE:nodeID*NODES_SIZE + NODES_SIZE]
             ip = node[1][0]
