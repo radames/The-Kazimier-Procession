@@ -1,4 +1,3 @@
-#include <Adafruit_NeoPixel.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <OSCMessage.h>
@@ -10,19 +9,13 @@
 #include <avr/power.h>
 #endif
 
-#define HALLSENSOR 5 //GPIO5
-#define LEDRINGPIN 4  //GPIO4
-#define PWMPIN 0  //GPIO0
-#define NUMPIXELS 48 //48 ws2812 RGB Pixels
-
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LEDRINGPIN, NEO_GRB + NEO_KHZ800);
-
+#define HALLSENSOR 14 //GPIO14 D5
 
 //pwm pins, d1,d2,d3,d4
-//esp8266, 5,4,0,2
-#define NUM_PWMS 4
-const unsigned int pwm_pins[NUM_PWMS] = {5, 4, 0, 2};
-unsigned int pwmValue[NUM_PWMS] = {0, 0, 0, 0};
+//esp8266, 5,4,0  
+#define NUM_PWMS 3
+const unsigned int pwm_pins[NUM_PWMS] = {5, 4, 0};
+unsigned int pwmValue[NUM_PWMS] = {0, 0, 0};
 
 // A UDP instance to let us send and receive packets over UDP
 
@@ -53,7 +46,7 @@ void setup() {
     pwmValue[i] = 0;
   }
   pinMode(HALLSENSOR, INPUT_PULLUP);
-  strip.begin();
+
 
   Serial.begin(115200);
 
@@ -145,18 +138,8 @@ void loop() {
             lastMillis = millis();
 
             Serial.println("Trying to connect...");
-            sendMessage("/connect", WiFi.macAddress());
+            sendMessage("/connectPWM", WiFi.macAddress());
             Serial.println("MAGNET DETECTED");
-            uint16_t i, j;
-            //magnet detected all leds to RED for 1s
-            for (i = 0; i < strip.numPixels(); i++) {
-              strip.setPixelColor(i, strip.Color(255, 0, 0));
-            }
-            strip.show();
-            delay(500);
-
-            strip.clear();
-            strip.show(); // Initialize all pixels to 'off'
           }
 
         } else {
@@ -178,8 +161,6 @@ void loop() {
 }
 
 void turnOffLights() {
-  strip.clear();
-  strip.show(); // Initialize all pixels to 'off'
   //turn off all PWMS
   for (int i = 0; i < NUM_PWMS; i++) {
     analogWrite(pwm_pins[i], 0);
@@ -198,6 +179,14 @@ void sendMessage(String address, String data) {
 }
 
 void ledPatternMode(boolean wifi) {
-
+  int power;
+  if (!wifi) {
+    power = abs(sin(millis() / 10 * PI / 180)) * 100;
+  } else {
+    power = abs(sin(millis() / 20 * PI / 180)) * 255;
+  }
+  for (int i = 0; i < NUM_PWMS; i++) {
+    analogWrite(pwm_pins[i], power);
+  }
 }
 
