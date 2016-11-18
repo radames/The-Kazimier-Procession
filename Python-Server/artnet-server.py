@@ -62,14 +62,15 @@ class OSCNodesServer(object):
             lFile = open("nodesList.dat", "rb")
             nodes = pickle.load(lFile)
             #Ordered Dictionary with the nodes position
-            self.nodesList = OrderedDict(sorted(nodes.iteritems(), key = lambda e:e[1][2]))
+            self.nodesList = OrderedDict(sorted(filter(lambda f:f[1][3] == 0, nodes.iteritems()), key = lambda e:e[1][2]))
+            self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0 ,nodes.iteritems()), key = lambda e:e[1][2]))
         except IOError:
             logging.error("File doesn't exist, creating a new one")
             lFile = open("nodesList.dat", "wb")
             pickle.dump({},lFile)
             lFile.close()
             self.nodesList = OrderedDict()
-
+            self.nodesListPWM = OrderedDict()
         pprint.pprint(self.nodesList.items())
         self.rgbBytes = [0]*NUM_UNIVERSES*512 #allocate list
         self.receiver = dispatch.Receiver()
@@ -136,9 +137,14 @@ class OSCNodesServer(object):
 #        port = address[1]
         port = self.send_port
         macAddr = message.getValues()[0]
+        try:
+            pwmnode = message.getValues()[1] #in case of a special node, contains num of PWMs on the node
+        except:
+            pwmnode = 0
         #update ip and port
-        self.nodesList[macAddr] = [ip, port, time.time()]
-        self.nodesList = OrderedDict(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2]))
+        self.nodesList[macAddr] = [ip, port, time.time(),pwmnode]
+        self.nodesList = OrderedDict(sorted(filter(lambda f:f[1][3] == 0,self.nodesList.iteritems()), key = lambda e:e[1][2]))
+        self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0,self.nodesList.iteritems()), key = lambda e:e[1][2]))
         #pprint.pprint(self.nodesList[macAddr])
         try:
             self.sender.send(osc.Message("/connected"), (ip, port))

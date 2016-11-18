@@ -109,7 +109,7 @@ void loop() {
       } else if (oscMessage.fullMatch("/isAlive")) {
         //Respond alive if get this message
         //change the state to wait
-        sendMessage("/alive", WiFi.macAddress());
+        sendMessage("/alive", WiFi.macAddress(), "");
         nState = WAIT;
         digitalWrite(BUILTIN_LED, 0); //ON LED back to ON
         turnOffLights();
@@ -138,7 +138,7 @@ void loop() {
             lastMillis = millis();
 
             Serial.println("Trying to connect...");
-            sendMessage("/connectPWM", WiFi.macAddress());
+            sendMessage("/connect", WiFi.macAddress(), String(NUM_PWMS));
             Serial.println("MAGNET DETECTED");
           }
 
@@ -169,9 +169,12 @@ void turnOffLights() {
 }
 
 
-void sendMessage(String address, String data) {
+void sendMessage(String address, String data, String info) {
   OSCMessage msg(address.c_str());
   msg.add(data.c_str());
+  if(info.length() > 0){
+    msg.add(info.c_str());
+  }
   Udp.beginPacket(outIp, outPort);
   msg.send(Udp);
   Udp.endPacket();
