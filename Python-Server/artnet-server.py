@@ -63,7 +63,7 @@ class OSCNodesServer(object):
             nodes = pickle.load(lFile)
             #Ordered Dictionary with the nodes position
             self.nodesList = OrderedDict(sorted(filter(lambda f:f[1][3] == 0, nodes.iteritems()), key = lambda e:e[1][2]))
-            self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0 ,nodes.iteritems()), key = lambda e:e[1][2]))
+            self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0 ,nodes.iteritems(), key = lambda e:e[1][2]))
         except IOError:
             logging.error("File doesn't exist, creating a new one")
             lFile = open("nodesList.dat", "wb")
@@ -113,6 +113,24 @@ class OSCNodesServer(object):
             except:
                 pass
                 #print "Error on ",ip,port
+        if universe == 10:
+            nodesPWM = self.nodesListPWM.items()
+            lastnPWM, nPWM = 0,0
+            for ind, node in enumerate(nodesPWM):
+                ip = node[1][0]
+                port = self.send_port
+                lastnPWM = nPWM
+                nPWM = node[1][3]
+                nodeChunck = universeBytes[ind*lastnPWM:ind*lastnPWM + nPWM]
+                oscmsg = osc.Message("/RGB")
+                for b in nodeChunck:
+                    oscmsg.add(b)
+                #logging.info("Sending OSC message to {}".format(ip))
+                try:
+                    self.sender.send(oscmsg, (ip,port))
+                except:
+                    pass
+
 
     def alive(self, message, address):
         """
