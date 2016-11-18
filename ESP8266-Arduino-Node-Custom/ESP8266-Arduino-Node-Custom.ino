@@ -16,7 +16,13 @@
 #define NUMPIXELS 48 //48 ws2812 RGB Pixels
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LEDRINGPIN, NEO_GRB + NEO_KHZ800);
-//
+
+
+//pwm pins, d1,d2,d3,d4
+//esp8266, 5,4,0,2
+#define NUM_PWMS 4
+const unsigned int pwm_pins[NUM_PWMS] = {5, 4, 0, 2};
+unsigned int pwmValue[NUM_PWMS] = {0, 0, 0, 0};
 
 // A UDP instance to let us send and receive packets over UDP
 
@@ -28,7 +34,6 @@ const unsigned int outPort = 9999;
 
 OSCErrorCode error;
 unsigned int ledState = HIGH;              // LOW means led is *on*
-unsigned int pwmValue = 255;
 //node s
 enum NodeState { CONNECT, WAIT, DISCONNECT };
 
@@ -42,8 +47,11 @@ void setup() {
   analogWriteRange(255);
   analogWriteFreq(200);
 
-  analogWrite(PWMPIN, pwmValue); //inverted PWM, starting OFF 255
-
+  //seting up pwm pins
+  for (int i = 0; i < NUM_PWMS; i++) {
+    analogWrite(pwm_pins[i], 0);
+    pwmValue[i] = 0;
+  }
   pinMode(HALLSENSOR, INPUT_PULLUP);
   strip.begin();
 
@@ -113,35 +121,15 @@ void loop() {
         digitalWrite(BUILTIN_LED, 0); //ON LED back to ON
         turnOffLights();
 
-      } else if (oscMessage.fullMatch("/RGB")) {
+      } else if (oscMessage.fullMatch("/PWMS")) {
         //overrides Magnet state, in case of the assignement is already made and kept on server
         if (nState != WAIT) {
           nState = WAIT;
         }
-
-        int pixelByte = 0;
-        //first 24 pixels with the first 72 bytes
-        while (pixelByte < 24 * 3) {
-          int r = oscMessage.getInt(pixelByte);
-          int g = oscMessage.getInt(pixelByte + 1);
-          int b = oscMessage.getInt(pixelByte + 2);
-          strip.setPixelColor(pixelByte / 3, strip.Color(r, g, b));
-          pixelByte += 3;
+        //get pwm bytes
+        for (int i = 0; i < NUM_PWMS; i++) {
+          analogWrite(pwm_pins[i], oscMessage.getInt(i));
         }
-        //next 3 bytes define the LED ring color
-        int r = oscMessage.getInt(pixelByte);
-        int g = oscMessage.getInt(pixelByte + 1);
-        int b = oscMessage.getInt(pixelByte + 2);
-
-        //set all 24 ws2812 pixels to the a sigle color
-        for (int i = 0; i < 24; i++) {
-          strip.setPixelColor(24 + i, strip.Color(r, g, b));
-        }
-        strip.show(); // Initialize all pixels to 'off'
-        //last byte address number 75
-        int PWM = oscMessage.getInt(pixelByte + 3); //last BYTE is PWM
-        pwmValue = 255 - PWM;
-        analogWrite(PWMPIN, pwmValue);
       }
 
     }
@@ -192,8 +180,11 @@ void loop() {
 void turnOffLights() {
   strip.clear();
   strip.show(); // Initialize all pixels to 'off'
-  pwmValue = 255;
-  analogWrite(PWMPIN, pwmValue); //inverted PWM, starting OFF 255
+  //turn off all PWMS
+  for (int i = 0; i < NUM_PWMS; i++) {
+    analogWrite(pwm_pins[i], 0);
+    pwmValue[i] = 0;
+  }
 }
 
 
@@ -207,34 +198,6 @@ void sendMessage(String address, String data) {
 }
 
 void ledPatternMode(boolean wifi) {
-  //rotating,pulsing yellowish fire color
-  int green = abs(sin(millis() / 20 * PI / 180)) * 30;
-  int whiteP = int(millis() / 90) % 24;
 
-  //first 24 leds top LED ring
-  for (int i = 0; i < 24; i++) {
-    if (!wifi) {
-      strip.setPixelColor(i % 24, strip.Color(255, green, 0)); //first ring
-      strip.setPixelColor(24 + i, strip.Color(255, green, 0)); //second ring is mirrored
-    } else {
-      strip.setPixelColor(i, strip.Color(50 + green*6, 0, 0)); //first ring
-      strip.setPixelColor(24 + i, strip.Color(50 + green*6, 0, 0)); //second ring
-    }
-  }
-  if (!wifi) {
-    for (int i = 0; i < 2; i++) {
-      strip.setPixelColor((whiteP + 12 * i) % 24, strip.Color(green * 8, green * 8, green * 8)); //first ring
-      strip.setPixelColor(24 + (whiteP + 12 * i) % 24, strip.Color(green * 8, green * 8, green * 8)); //second ring
-    }
-  }
-
-
-  //turn off PWM pin only once
-  if (pwmValue != 255) {
-    pwmValue = 255;
-    analogWrite(PWMPIN, pwmValue); //inverted PWM, starting OFF 255
-  }
-
-  strip.show();//update leds
 }
 
