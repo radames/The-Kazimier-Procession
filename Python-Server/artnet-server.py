@@ -63,7 +63,7 @@ class OSCNodesServer(object):
             nodes = pickle.load(lFile)
             #Ordered Dictionary with the nodes position
             self.nodesList = OrderedDict(sorted(filter(lambda f:f[1][3] == 0, nodes.iteritems()), key = lambda e:e[1][2]))
-            self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0 ,nodes.iteritems(), key = lambda e:e[1][2]))
+            self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0, nodes.iteritems()), key = lambda e:e[1][2]))
         except IOError:
             logging.error("File doesn't exist, creating a new one")
             lFile = open("nodesList.dat", "wb")
