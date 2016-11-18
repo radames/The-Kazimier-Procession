@@ -94,6 +94,16 @@ class OSCNodesServer(object):
                 except:
                     print "Error on ",ip,port
                 time.sleep(0.1)
+        if not self.nodesListPWM == {}:
+          for node, (macAddr, data) in enumerate(self.nodesListPWM.iteritems()): #sort by the time of the conection
+                ip = data[0]
+                port = self.send_port
+                logging.info("Send Alive {} {}".format(ip,macAddr))
+                try:
+                    self.sender.send(osc.Message("/isAlive", macAddr), (ip,port))
+                except:
+                    print "Error on ",ip,port
+                time.sleep(0.1)
 
     def update(self, universeBytes, universe):
         self.rgbBytes[universe*512:universe*512 + 512] = universeBytes
@@ -122,7 +132,7 @@ class OSCNodesServer(object):
                 lastnPWM = nPWM
                 nPWM = node[1][3]
                 nodeChunck = universeBytes[ind*lastnPWM:ind*lastnPWM + nPWM]
-                oscmsg = osc.Message("/RGB")
+                oscmsg = osc.Message("/PWMS")
                 for b in nodeChunck:
                     oscmsg.add(b)
                 #logging.info("Sending OSC message to {}".format(ip))
@@ -191,7 +201,15 @@ class OSCNodesServer(object):
             except:
                 print "Error on ",ip,port
             time.sleep(0.1)
-
+        for node, (macAddr, data) in enumerate(self.nodesListPWM.iteritems()): #sort by the time of the conection
+            ip = data[0]
+            port = self.send_port
+            logging.info("Send disconnect {} {}".format(ip,macAddr))
+            try:
+                self.sender.send(osc.Message("/disconnect", True), (ip,port))
+            except:
+                print "Error on ",ip,port
+            time.sleep(0.1)
 
 if __name__ == "__main__":
 
