@@ -123,14 +123,14 @@ class OSCNodesServer(object):
             except:
                 pass
                 #print "Error on ",ip,port
-        if universe == 10:
+        if universe == 9:
             nodesPWM = self.nodesListPWM.items()
             lastnPWM, nPWM = 0,0
             for ind, node in enumerate(nodesPWM):
                 ip = node[1][0]
                 port = self.send_port
                 lastnPWM = nPWM
-                nPWM = node[1][3]
+                nPWM = int(node[1][3])
                 nodeChunck = universeBytes[ind*lastnPWM:ind*lastnPWM + nPWM]
                 oscmsg = osc.Message("/PWMS")
                 for b in nodeChunck:
@@ -167,12 +167,12 @@ class OSCNodesServer(object):
         macAddr = message.getValues()[0]
         try:
             pwmnode = message.getValues()[1] #in case of a special node, contains num of PWMs on the node
+            self.nodesListPWM[macAddr] = [ip, port, time.time(),pwmnode]
         except:
-            pwmnode = 0
+            self.nodesList[macAddr] = [ip, port, time.time(), 0]
         #update ip and port
-        self.nodesList[macAddr] = [ip, port, time.time(),pwmnode]
-        self.nodesList = OrderedDict(sorted(filter(lambda f:f[1][3] == 0,self.nodesList.iteritems()), key = lambda e:e[1][2]))
-        self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0,self.nodesList.iteritems()), key = lambda e:e[1][2]))
+        self.nodesList = OrderedDict(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2]))
+        self.nodesListPWM = OrderedDict(sorted(self.nodesListPWM.iteritems(), key = lambda e:e[1][2]))
         #pprint.pprint(self.nodesList[macAddr])
         try:
             self.sender.send(osc.Message("/connected"), (ip, port))

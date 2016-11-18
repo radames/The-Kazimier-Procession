@@ -15,7 +15,7 @@
 //esp8266, 5,4,0  
 #define NUM_PWMS 3
 const unsigned int pwm_pins[NUM_PWMS] = {5, 4, 0};
-unsigned int pwmValue[NUM_PWMS] = {0, 0, 0};
+unsigned int pwmValue[NUM_PWMS];
 
 // A UDP instance to let us send and receive packets over UDP
 
