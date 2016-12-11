@@ -61,9 +61,10 @@ class OSCNodesServer(object):
             logging.info("Open File with nodes information")
             lFile = open("nodesList.dat", "rb")
             nodes = pickle.load(lFile)
+            nodesPwm = pickle.load(lFile)
             #Ordered Dictionary with the nodes position
             self.nodesList = OrderedDict(sorted(filter(lambda f:f[1][3] == 0, nodes.iteritems()), key = lambda e:e[1][2]))
-            self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0, nodes.iteritems()), key = lambda e:e[1][2]))
+            self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0, nodesPwm.iteritems()), key = lambda e:e[1][2]))
             pprint.pprint(self.nodesList)
             pprint.pprint(self.nodesListPWM)
         except IOError:
