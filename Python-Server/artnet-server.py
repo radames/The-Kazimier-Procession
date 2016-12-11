@@ -145,16 +145,18 @@ class OSCNodesServer(object):
     def alive(self, message, address):
         """
         Alive response form the nodes,
-        update port connection
+        update port connection, ipaddress
         """
         ip = address[0]
 #        port = address[1]
         port = self.send_port
         macAddr = message.getValues()[0]
         logging.info("I'm alive {} {} {}".format(ip,port,macAddr))
-        #update only IP and
-        self.nodesList[macAddr][0:2] = [ip,port]
-        #pprint.pprint(self.nodesList)
+        try:
+            pwmnode = message.getValues()[1] #in case of a special node, contains num of PWMs on the node
+            self.nodesListPWM[macAddr][0:2] = [ip, port]
+        except:
+            self.nodesList[macAddr][0:2] = [ip, port]
 
     def connect(self, message, address):
         """

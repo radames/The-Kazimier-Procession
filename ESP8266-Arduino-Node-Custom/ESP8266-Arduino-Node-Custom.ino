@@ -109,7 +109,7 @@ void loop() {
       } else if (oscMessage.fullMatch("/isAlive")) {
         //Respond alive if get this message
         //change the state to wait
-        sendMessage("/alive", WiFi.macAddress(), "");
+        sendMessage("/alive", WiFi.macAddress(), String(NUM_PWMS));
         nState = WAIT;
         digitalWrite(BUILTIN_LED, 0); //ON LED back to ON
         turnOffLights();
