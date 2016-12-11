@@ -9,12 +9,12 @@
 #include <avr/power.h>
 #endif
 
-#define HALLSENSOR 14 //GPIO14 D5
+#define HALLSENSOR 4 //GPIO4 D2
 
-//pwm pins, d1,d2,d3,d4
-//esp8266, 5,4,0  
-#define NUM_PWMS 3
-const unsigned int pwm_pins[NUM_PWMS] = {5, 4, 0};
+//pwm pins, d1
+//esp8266 GPIO5
+#define NUM_PWMS 1
+const unsigned int pwm_pins[NUM_PWMS] = {5};
 unsigned int pwmValue[NUM_PWMS];
 
 // A UDP instance to let us send and receive packets over UDP
@@ -184,9 +184,9 @@ void sendMessage(String address, String data, String info) {
 void ledPatternMode(boolean wifi) {
   int power;
   if (!wifi) {
-    power = abs(sin(millis() / 10 * PI / 180)) * 100;
+    power = abs(sin(millis() / 5 * PI / 180)) * 255;
   } else {
-    power = abs(sin(millis() / 20 * PI / 180)) * 255;
+    power = (sin(millis() / 5 * PI / 180)) > 0?255:0;
   }
   for (int i = 0; i < NUM_PWMS; i++) {
     analogWrite(pwm_pins[i], power);
