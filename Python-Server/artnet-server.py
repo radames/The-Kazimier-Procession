@@ -69,6 +69,7 @@ class OSCNodesServer(object):
             lFile = open("nodesList.dat", "wb")
             pickle.dump({},lFile)
             lFile.close()
+            #keep list of nodes and custom nodes
             self.nodesList = OrderedDict()
             self.nodesListPWM = OrderedDict()
         pprint.pprint(self.nodesList.items())
@@ -123,7 +124,7 @@ class OSCNodesServer(object):
             except:
                 pass
                 #print "Error on ",ip,port
-        if universe == 9:
+        if universe == 9: #universe 9 reserved for custom nodes
             nodesPWM = self.nodesListPWM.items()
             lastnPWM, nPWM = 0,0
             for ind, node in enumerate(nodesPWM):
@@ -167,14 +168,14 @@ class OSCNodesServer(object):
 #        port = address[1]
         port = self.send_port
         macAddr = message.getValues()[0]
+        #update ip and port
         try:
             pwmnode = message.getValues()[1] #in case of a special node, contains num of PWMs on the node
             self.nodesListPWM[macAddr] = [ip, port, time.time(),pwmnode]
+            self.nodesListPWM = OrderedDict(sorted(self.nodesListPWM.iteritems(), key = lambda e:e[1][2]))
         except:
             self.nodesList[macAddr] = [ip, port, time.time(), 0]
-        #update ip and port
-        self.nodesList = OrderedDict(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2]))
-        self.nodesListPWM = OrderedDict(sorted(self.nodesListPWM.iteritems(), key = lambda e:e[1][2]))
+            self.nodesList = OrderedDict(sorted(self.nodesList.iteritems(), key = lambda e:e[1][2]))
         #pprint.pprint(self.nodesList[macAddr])
         try:
             self.sender.send(osc.Message("/connected"), (ip, port))
