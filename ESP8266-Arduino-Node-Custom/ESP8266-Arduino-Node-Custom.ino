@@ -42,7 +42,7 @@ void setup() {
 
   //seting up pwm pins
   for (int i = 0; i < NUM_PWMS; i++) {
-    analogWrite(pwm_pins[i], 0);
+    analogWrite(pwm_pins[i], 255); //inverted PWM signal
     pwmValue[i] = 0;
   }
   pinMode(HALLSENSOR, INPUT_PULLUP);
@@ -121,7 +121,7 @@ void loop() {
         }
         //get pwm bytes
         for (int i = 0; i < NUM_PWMS; i++) {
-          analogWrite(pwm_pins[i], oscMessage.getInt(i));
+          analogWrite(pwm_pins[i], 255 - oscMessage.getInt(i)); //Inverted PWM signal
         }
       }
 
@@ -163,7 +163,7 @@ void loop() {
 void turnOffLights() {
   //turn off all PWMS
   for (int i = 0; i < NUM_PWMS; i++) {
-    analogWrite(pwm_pins[i], 0);
+    analogWrite(pwm_pins[i], 255);
     pwmValue[i] = 0;
   }
 }
