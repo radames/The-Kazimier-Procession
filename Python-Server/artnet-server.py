@@ -64,6 +64,8 @@ class OSCNodesServer(object):
             #Ordered Dictionary with the nodes position
             self.nodesList = OrderedDict(sorted(filter(lambda f:f[1][3] == 0, nodes.iteritems()), key = lambda e:e[1][2]))
             self.nodesListPWM = OrderedDict(sorted(filter(lambda f:f[1][3] > 0, nodes.iteritems()), key = lambda e:e[1][2]))
+            pprint.pprint(self.nodesList)
+            pprint.pprint(self.nodesListPWM)
         except IOError:
             logging.error("File doesn't exist, creating a new one")
             lFile = open("nodesList.dat", "wb")
@@ -193,6 +195,7 @@ class OSCNodesServer(object):
         #send disconnect command do nodes
         lFile = open("nodesList.dat", "wb")
         pickle.dump(self.nodesList, lFile)
+        pickle.dump(self.nodesListPWM, lFile)
         lFile.close()
         #send disconnect in ordered way
         for node, (macAddr, data) in enumerate(self.nodesList.iteritems()): #sort by the time of the conection
