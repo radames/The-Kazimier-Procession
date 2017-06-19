@@ -10,9 +10,9 @@
 #include <avr/power.h>
 #endif
 
-#define HALLSENSOR 5 //GPIO5
-#define LEDRINGPIN 4  //GPIO4
-#define PWMPIN 0  //GPIO0
+#define HALLSENSOR 5 //GPIO5 - PIN D1
+#define LEDRINGPIN 4  //GPIO4 - PIN D2
+#define PWMPIN 0  //GPIO0 -  PIN D3
 #define NUMPIXELS 48 //48 ws2812 RGB Pixels
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LEDRINGPIN, NEO_GRB + NEO_KHZ800);
