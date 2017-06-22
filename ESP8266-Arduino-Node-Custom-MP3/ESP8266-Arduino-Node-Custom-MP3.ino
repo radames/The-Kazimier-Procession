@@ -5,6 +5,7 @@
 #include <OSCData.h>
 #include <SoftwareSerial.h>
 #include "DFRobotDFPlayerMini.h"
+#include "Audio.h"
 
 #include "WifiPass.h"
 
@@ -13,6 +14,10 @@
 #endif
 
 #define HALLSENSOR 4 //GPIO4 D2
+
+//number of audio tracks to be played
+#define AUDIO_TRACKS 1
+Audio tracks[AUDIO_TRACKS];
 
 //pwm pins, d1
 //esp8266 GPIO5
@@ -125,7 +130,7 @@ void loop() {
       } else if (oscMessage.fullMatch("/isAlive")) {
         //Respond alive if get this message
         //change the state to wait
-        sendMessage("/alive", WiFi.macAddress(), String(NUM_PWMS));
+        sendMessage("/alive", WiFi.macAddress(), String(NUM_PWMS + AUDIO_TRACKS));
         nState = WAIT;
         digitalWrite(BUILTIN_LED, 0); //ON LED back to ON
         turnOffLights();
@@ -138,6 +143,10 @@ void loop() {
         //get pwm bytes
         for (int i = 0; i < NUM_PWMS; i++) {
           analogWrite(pwm_pins[i], 255 - oscMessage.getInt(i)); //Inverted PWM signal
+        }
+        //get MP3 Tracks bytes
+        for (int i = 0; i < AUDIO_TRACKS; i++) {
+          tracks[i].update(oscMessage.getInt(i)); //Audio track byte
         }
       }
 
