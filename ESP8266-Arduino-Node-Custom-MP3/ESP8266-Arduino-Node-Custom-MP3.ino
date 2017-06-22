@@ -17,7 +17,7 @@
 #define HALLSENSOR 4 //GPIO4 D2
 
 //number of audio tracks to be played
-#define AUDIO_TRACKS 1
+#define AUDIO_TRACKS 3
 Audio tracks[AUDIO_TRACKS];
 
 //pwm pins, d1
@@ -70,7 +70,11 @@ void setup() {
     while(true);
   }
   myDFPlayer.volume(30);  //Set volume value. From 0 to 30
-    
+    //setting up audio objects
+  for (int i = 0; i < AUDIO_TRACKS; i++) {
+    tracks[i].start(myDFPlayer);
+  }
+  
   // Connect to WiFi network
   Serial.println();
   Serial.println();
@@ -141,12 +145,15 @@ void loop() {
           nState = WAIT;
         }
         //get pwm bytes
+        int oscCount = 0;
         for (int i = 0; i < NUM_PWMS; i++) {
-          pwmNodes[i].update( 255 - oscMessage.getInt(i));
+          pwmNodes[i].update( 255 - oscMessage.getInt(oscCount));
+          oscCount++;
         }
         //get MP3 Tracks bytes
         for (int i = 0; i < AUDIO_TRACKS; i++) {
-          tracks[i].update(oscMessage.getInt(i)); //Audio track byte
+          tracks[i].update(oscMessage.getInt(oscCount)); //Audio track byte
+          oscCount++;
         }
       }
 
@@ -163,7 +170,7 @@ void loop() {
             lastMillis = millis();
 
             Serial.println("Trying to connect...");
-            sendMessage("/connect", WiFi.macAddress(), String(NUM_PWMS));
+            sendMessage("/connect", WiFi.macAddress(), String(NUM_PWMS + AUDIO_TRACKS));
             Serial.println("MAGNET DETECTED");
           }
 
