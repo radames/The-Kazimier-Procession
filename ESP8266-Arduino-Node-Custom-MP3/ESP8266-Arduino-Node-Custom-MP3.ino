@@ -6,6 +6,7 @@
 #include <SoftwareSerial.h>
 #include "DFRobotDFPlayerMini.h"
 #include "Audio.h"
+#include "PWMNode.h"
 
 #include "WifiPass.h"
 
@@ -22,8 +23,8 @@ Audio tracks[AUDIO_TRACKS];
 //pwm pins, d1
 //esp8266 GPIO5
 #define NUM_PWMS 1
+PWMNode pwmNodes[NUM_PWMS];
 const unsigned int pwm_pins[NUM_PWMS] = {5};
-unsigned int pwmValue[NUM_PWMS];
 
 // Software Serial communication with MP3 player
 SoftwareSerial vSerial(14, 12, false, 256);  // wemos pins D5(RX) and D6(TX)
@@ -54,8 +55,7 @@ void setup() {
 
   //seting up pwm pins
   for (int i = 0; i < NUM_PWMS; i++) {
-    analogWrite(pwm_pins[i], 255); //inverted PWM signal
-    pwmValue[i] = 0;
+    pwmNodes[i].setPin(pwm_pins[i]);
   }
   pinMode(HALLSENSOR, INPUT_PULLUP);
 
@@ -142,7 +142,7 @@ void loop() {
         }
         //get pwm bytes
         for (int i = 0; i < NUM_PWMS; i++) {
-          analogWrite(pwm_pins[i], 255 - oscMessage.getInt(i)); //Inverted PWM signal
+          pwmNodes[i].update( 255 - oscMessage.getInt(i));
         }
         //get MP3 Tracks bytes
         for (int i = 0; i < AUDIO_TRACKS; i++) {
@@ -188,8 +188,7 @@ void loop() {
 void turnOffLights() {
   //turn off all PWMS
   for (int i = 0; i < NUM_PWMS; i++) {
-    analogWrite(pwm_pins[i], 255);
-    pwmValue[i] = 0;
+    pwmNodes[i].update(255);
   }
 }
 
@@ -214,7 +213,7 @@ void ledPatternMode(boolean wifi) {
     power = (sin(millis() / 5 * PI / 180)) > 0?255:0;
   }
   for (int i = 0; i < NUM_PWMS; i++) {
-    analogWrite(pwm_pins[i], power);
+    pwmNodes[i].update(power);
   }
 }
 
