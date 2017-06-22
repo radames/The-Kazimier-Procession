@@ -26,7 +26,7 @@ DFRobotDFPlayerMini myDFPlayer; //DFmp3 player instance
 
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
-const IPAddress outIp(192, 168, 20, 3);  // remote IP (not needed for receive) kronosServer static IP
+IPAddress outIp;  // remote IP (not needed for receive) kronosServer static IP
 
 const unsigned int inPort = 8888;
 const unsigned int outPort = 9999;
@@ -40,6 +40,7 @@ NodeState nState = CONNECT;
 long lastMillis = 0;
 
 void setup() {
+  outIp.fromString(serverIP); //server ip from config file
   pinMode(BUILTIN_LED, OUTPUT);
   digitalWrite(BUILTIN_LED, ledState);    // turn *on* led
 
