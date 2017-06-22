@@ -15,7 +15,6 @@ class Audio
     int _trackid;
     DFRobotDFPlayerMini* _DFPlayer;
     int _value;
-    int _volume;
     bool _isPlaying;
 };
 

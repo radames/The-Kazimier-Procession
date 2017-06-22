@@ -8,7 +8,6 @@ Audio::Audio()
   _trackid = _id++;
   _value = 0;
   _isPlaying = false;
-  _volume = 30;
 }
 void Audio::start(DFRobotDFPlayerMini &DFPlayer){
   _DFPlayer = &DFPlayer;
@@ -18,12 +17,12 @@ void Audio::update(int value)
   _value = value;
   if(value >= 254){
     _DFPlayer->play(_trackid);
-    Serial.println("Playing: " + String(_trackid));
-  }
-}
 
-void Audio::setVolume(int volume){
-  _volume = volume;
-  _DFPlayer->volume(volume);
+  }else if(value >= 224 && value <= 254){
+    _DFPlayer->volume(value - 224);
+  
+  }else if(value >= 200 && value <= 223){
+    _DFPlayer->stop();
+  }
 }
 
