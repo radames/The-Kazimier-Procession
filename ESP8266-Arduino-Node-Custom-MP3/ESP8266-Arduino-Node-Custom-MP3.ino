@@ -158,7 +158,7 @@ void loop() {
           oscCount++;
         }
         //update global volume in case it has changed
-        int currVolume = oscMessage.getInt(oscCount);
+        int currVolume = 30*oscMessage.getInt(oscCount)/255;
         if(currVolume != globalVolume){
           myDFPlayer.volume(currVolume);
           globalVolume = currVolume;
