@@ -8,7 +8,6 @@ class Audio
   public:
     Audio();
     void update(int value);
-    void setVolume(int value);
     void start(DFRobotDFPlayerMini &DFPlayer);
   private:
     static int _id;

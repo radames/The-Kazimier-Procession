@@ -17,12 +17,10 @@ void Audio::update(int value)
   _value = value;
   if(value >= 254){
     _DFPlayer->play(_trackid);
-
-  }else if(value >= 224 && value <= 254){
-    _DFPlayer->volume(value - 224);
-  
-  }else if(value >= 200 && value <= 223){
+    
+  }else if(value >= 10 && value <= 11){
     _DFPlayer->stop();
+    
   }
 }
 

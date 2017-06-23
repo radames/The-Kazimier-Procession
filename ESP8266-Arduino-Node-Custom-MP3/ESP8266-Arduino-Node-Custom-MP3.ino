@@ -20,6 +20,8 @@
 #define AUDIO_TRACKS 3
 Audio tracks[AUDIO_TRACKS];
 
+#define VOLUME_CHANNEL 1 //space for volume channel
+int globalVolume = 30;
 //pwm pins, d1
 //esp8266 GPIO5
 #define NUM_PWMS 1
@@ -69,7 +71,7 @@ void setup() {
     Serial.println(F("2.Please insert the SD card!"));
     while(true);
   }
-  myDFPlayer.volume(30);  //Set volume value. From 0 to 30
+  myDFPlayer.volume(globalVolume);  //Set volume value. From 0 to 30
     //setting up audio objects
   for (int i = 0; i < AUDIO_TRACKS; i++) {
     tracks[i].start(myDFPlayer);
@@ -134,7 +136,7 @@ void loop() {
       } else if (oscMessage.fullMatch("/isAlive")) {
         //Respond alive if get this message
         //change the state to wait
-        sendMessage("/alive", WiFi.macAddress(), String(NUM_PWMS + AUDIO_TRACKS));
+        sendMessage("/alive", WiFi.macAddress(), String(NUM_PWMS + AUDIO_TRACKS + VOLUME_CHANNEL));
         nState = WAIT;
         digitalWrite(BUILTIN_LED, 0); //ON LED back to ON
         turnOffLights();
@@ -155,6 +157,12 @@ void loop() {
           tracks[i].update(oscMessage.getInt(oscCount)); //Audio track byte
           oscCount++;
         }
+        //update global volume in case it has changed
+        int currVolume = oscMessage.getInt(oscCount);
+        if(currVolume != globalVolume){
+          myDFPlayer.volume(currVolume);
+          globalVolume = currVolume;
+        }
       }
 
     }
@@ -170,7 +178,7 @@ void loop() {
             lastMillis = millis();
 
             Serial.println("Trying to connect...");
-            sendMessage("/connect", WiFi.macAddress(), String(NUM_PWMS + AUDIO_TRACKS));
+            sendMessage("/connect", WiFi.macAddress(), String(NUM_PWMS + AUDIO_TRACKS + VOLUME_CHANNEL));
             Serial.println("MAGNET DETECTED");
           }
 
