@@ -3,7 +3,7 @@
 
 PWMNode::PWMNode()
 {
-  _value = 255; //inverted PWM
+  _value = 0;
   _pin = 0;
 }
 
@@ -14,6 +14,6 @@ void PWMNode::update(int value)
 }
 void PWMNode::setPin(int pin){
   _pin = pin;
-  update(255); //start inverted
+  update(0); //start inverted
 }
 

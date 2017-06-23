@@ -147,7 +147,7 @@ void loop() {
         //get pwm bytes
         int oscCount = 0;
         for (int i = 0; i < NUM_PWMS; i++) {
-          pwmNodes[i].update( 255 - oscMessage.getInt(oscCount));
+          pwmNodes[i].update(oscMessage.getInt(oscCount));
           oscCount++;
         }
         //get MP3 Tracks bytes
