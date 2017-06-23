@@ -219,8 +219,6 @@ void ledPatternMode(boolean wifi) {
   } else {
     power = (sin(millis() / 5 * PI / 180)) > 0?255:0;
   }
-  for (int i = 0; i < NUM_PWMS; i++) {
-    pwmNodes[i].update(power);
-  }
+  pwmNodes[0].update(power);
 }
 
