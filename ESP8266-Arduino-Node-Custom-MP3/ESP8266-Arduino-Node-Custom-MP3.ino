@@ -27,6 +27,7 @@ int globalVolume = 30;
 #define NUM_PWMS 1
 PWMNode pwmNodes[NUM_PWMS];
 const unsigned int pwm_pins[NUM_PWMS] = {5};
+const bool pwm_pins_inverted[NUM_PWMS] = {true}; /* list following pwm_pins with false non-inverted and true for inverted*/
 
 // Software Serial communication with MP3 player
 SoftwareSerial vSerial(14, 12, false, 256);  // wemos pins D5(RX) and D6(TX)
@@ -58,6 +59,7 @@ void setup() {
   //seting up pwm pins
   for (int i = 0; i < NUM_PWMS; i++) {
     pwmNodes[i].setPin(pwm_pins[i]);
+    pwmNodes[i].setPWM(pwm_pins_inverted[i]);
   }
   pinMode(HALLSENSOR, INPUT_PULLUP);
 
