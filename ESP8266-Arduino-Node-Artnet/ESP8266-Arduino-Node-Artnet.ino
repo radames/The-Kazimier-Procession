@@ -28,7 +28,7 @@ void updateLeds(uint8_t *data, uint16_t size)
 }
 void updatePWM(uint8_t *data, uint16_t size)
 {
-  analogWrite(PWMPIN, data[0]);
+  analogWrite(PWMPIN, 255-data[0]);
 }
 
 void turnOffLights()
