@@ -28,7 +28,7 @@ void updateLeds(uint8_t *data, uint16_t size)
 }
 void updatePWM(uint8_t *data, uint16_t size)
 {
-  analogWrite(PWMPIN, 255-data[0]);
+  analogWrite(PWMPIN, 255 - data[0]);
 }
 
 void turnOffLights()
@@ -42,7 +42,9 @@ void turnOffLights()
 void ledPatternMode(boolean wifi)
 {
   //rotating,pulsing yellowish fire color
-  int green = abs(sin(millis() / 20 * PI / 180)) * 30;
+  int pulsingValueMax = 30;
+  int pulsingValueWhiteFactor = 8;
+  int pulsingValue = abs(sin(millis() / 20 * PI / 180)) * pulsingValueMax;
   int whiteP = int(millis() / 90) % 24;
 
   //first 24 leds top LED ring
@@ -50,21 +52,22 @@ void ledPatternMode(boolean wifi)
   {
     if (!wifi)
     {
-      strip.setPixelColor(i % 24, strip.Color(255, green, 0)); //first ring
-      strip.setPixelColor(24 + i, strip.Color(255, green, 0)); //second ring is mirrored
+      strip.setPixelColor(i % 24, strip.Color(255, pulsingValue, 0)); //first ring
+      strip.setPixelColor(24 + i, strip.Color(255, pulsingValue, 0)); //second ring is mirrored
     }
     else
     {
-      strip.setPixelColor(i, strip.Color(50 + green * 6, 0, 0));      //first ring
-      strip.setPixelColor(24 + i, strip.Color(50 + green * 6, 0, 0)); //second ring
+      strip.setPixelColor(i, strip.Color(50 + pulsingValue * 6, 0, 0));      //first ring
+      strip.setPixelColor(24 + i, strip.Color(50 + pulsingValue * 6, 0, 0)); //second ring
     }
   }
   if (!wifi)
   {
+    int whiteValue = pulsingValueWhiteFactor  * pulsingValue;
     for (int i = 0; i < 2; i++)
     {
-      strip.setPixelColor((whiteP + 12 * i) % 24, strip.Color(green * 8, green * 8, green * 8));      //first ring
-      strip.setPixelColor(24 + (whiteP + 12 * i) % 24, strip.Color(green * 8, green * 8, green * 8)); //second ring
+      strip.setPixelColor((whiteP + 12 * i) % 24, strip.Color(whiteValue, whiteValue, whiteValue));    //first ring
+      strip.setPixelColor(24 + (whiteP + 12 * i) % 24, strip.Color(whiteValue, whiteValue, whiteValue)); //second ring
     }
   }
 
